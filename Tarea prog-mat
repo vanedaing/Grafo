@@ -1,0 +1,85 @@
+import numpy as np
+
+class Grafo:
+    def __init__(self, nodos):
+        # Inicializa la matriz de adyacencia con infinitos
+        self.nodos = nodos
+        self.matriz_adyacencia = np.full((nodos, nodos), float('inf'))
+        # La distancia de cada nodo a sí mismo es 0
+        np.fill_diagonal(self.matriz_adyacencia, 0)
+
+    def agregar_nodo(self):
+        # Incrementa el número de nodos y redimensiona la matriz
+        self.nodos += 1
+        nueva_matriz = np.full((self.nodos, self.nodos), float('inf'))
+        nueva_matriz[:self.nodos-1, :self.nodos-1] = self.matriz_adyacencia
+        np.fill_diagonal(nueva_matriz, 0)
+        self.matriz_adyacencia = nueva_matriz
+
+    def agregar_arista(self, origen, destino, peso):
+        # Agrega una arista con peso entre los nodos origen y destino
+        if origen < self.nodos and destino < self.nodos:
+            self.matriz_adyacencia[origen, destino] = peso
+        else:
+            print("Error: El nodo especificado no existe.")
+
+    def mostrar_matriz(self):
+        # Imprime la matriz de adyacencia
+        print("Matriz de Adyacencia:")
+        for fila in self.matriz_adyacencia:
+            print(fila)
+
+    def dijkstra(self, origen):
+        distancias = np.full(self.nodos, float('inf'))
+        distancias[origen] = 0
+        visitado = np.full(self.nodos, False)
+        camino = np.full(self.nodos, -1)
+
+        for _ in range(self.nodos):
+            # Selecciona el nodo no visitado con la menor distancia
+            u = np.argmin(np.where(visitado, float('inf'), distancias))
+            visitado[u] = True
+
+            # Actualiza las distancias de los nodos adyacentes
+            for v in range(self.nodos):
+                if self.matriz_adyacencia[u, v] != float('inf') and not visitado[v]:
+                    nueva_distancia = distancias[u] + self.matriz_adyacencia[u, v]
+                    if nueva_distancia < distancias[v]:
+                        distancias[v] = nueva_distancia
+                        camino[v] = u
+
+        return distancias, camino
+
+    def mostrar_camino(self, origen, destino):
+        distancias, camino = self.dijkstra(origen)
+
+        if distancias[destino] == float('inf'):
+            print(f"No hay camino de {origen} a {destino}.")
+            return
+
+        ruta = []
+        actual = destino
+        while actual != -1:
+            ruta.insert(0, actual)
+            actual = camino[actual]
+
+        print(f"Camino más corto de {origen} a {destino}: {ruta} con costo {distancias[destino]}")
+
+# Crear un grafo con 6 nodos: a, b, c, d, e, f
+grafo = Grafo(6)
+
+# Agregar aristas con peso (mayores a 10)
+grafo.agregar_arista(0, 1, 15)  # a -> b
+grafo.agregar_arista(0, 2, 20)  # a -> c
+grafo.agregar_arista(1, 3, 10)  # b -> d
+grafo.agregar_arista(2, 3, 25)  # c -> d
+grafo.agregar_arista(1, 4, 30)  # b -> e
+grafo.agregar_arista(4, 5, 10)  # e -> f
+grafo.agregar_arista(3, 5, 5)    # d -> f
+
+# Mostrar la matriz de adyacencia
+grafo.mostrar_matriz()
+
+# Ejecutar el algoritmo de Dijkstra desde el nodo 'a' (0) a 'f' (5)
+print("\nResultado del algoritmo de Dijkstra:")
+grafo.mostrar_camino(0, 5)  # Camino de 'a' a 'f'
